@@ -1,0 +1,38 @@
+volumes:
+  db_data:
+
+services:
+  db:
+    image: postgres:17.4-alpine
+    container_name: database
+    user: postgres
+    env_file:
+      - env/db.env
+      - env/app.env
+    volumes:
+      - ./initdb.sh:/docker-entrypoint-initdb.d/initdb.sh
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: always
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}" ]
+      start_period: 10s
+      interval: 60s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: .
+    image: backend:latest
+    container_name: backend
+    user: my_user
+    command: "fastapi run main.py"
+    env_file:
+      - env/app.env
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: always
