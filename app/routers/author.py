@@ -48,8 +48,7 @@ async def get_author(
         .group_by(Author.id)
     )
     author = author.scalar_one_or_none()
-
-    if not author:
+    if author is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Author not found"

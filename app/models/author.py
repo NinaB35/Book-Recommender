@@ -3,7 +3,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.database import Base
+from .base import Base
 
 
 class Author(Base):
@@ -46,6 +46,3 @@ class Author(Base):
     async def get_by_name(cls, db: AsyncSession, name: str):
         result = await db.execute(select(cls).where(func.lower(cls.name) == func.lower(name)))
         return result.scalar_one_or_none()
-
-    def __repr__(self):
-        return f"<Author(id={self.id}, name='{self.name}')>"

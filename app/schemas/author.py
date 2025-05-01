@@ -1,7 +1,7 @@
 from typing import Annotated, Optional
 
 from fastapi import Query
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 example_bio = """Джоан Роулинг — британская писательница, сценаристка и кинопродюсер. Наиболее известна как автор серии романов о Гарри Поттере в жанре фэнтези.
 
@@ -13,15 +13,14 @@ example_bio = """Джоан Роулинг — британская писате
 class AuthorBase(BaseModel):
     name: Annotated[
         str,
-        Query(min_length=2, max_length=100, pattern="^[a-zA-Zа-яА-ЯёЁ \-]+$", examples=["Джоан Кэтлин Роулинг"])
+        Query(min_length=2, max_length=100, pattern="^[a-zA-Zа-яА-ЯёЁ -]+$", examples=["Джоан Кэтлин Роулинг"])
     ]
     bio: Optional[Annotated[
         str,
         Query(max_length=1000, examples=[example_bio])
     ]] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class AuthorCreate(AuthorBase):
@@ -31,7 +30,7 @@ class AuthorCreate(AuthorBase):
 class AuthorUpdate(AuthorBase):
     name: Optional[Annotated[
         str,
-        Query(min_length=2, max_length=100, pattern="^[a-zA-Zа-яА-ЯёЁ \-]+$", examples=["Джоан Кэтлин Роулинг"])
+        Query(min_length=2, max_length=100, pattern="^[a-zA-Zа-яА-ЯёЁ -]+$", examples=["Джоан Кэтлин Роулинг"])
     ]] = None
 
 

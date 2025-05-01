@@ -1,15 +1,14 @@
 from typing import Annotated
 
 from fastapi import Query
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, ConfigDict
 
 
 class UserBase(BaseModel):
     email: EmailStr
     username: Annotated[str, Query(min_length=3, max_length=50, pattern="^[a-zA-Z0-9_]+$")]
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UserCreate(UserBase):
