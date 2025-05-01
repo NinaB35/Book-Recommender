@@ -18,3 +18,4 @@ class Book(Base):
         secondary="book_genre",
         back_populates="books"
     )
+    ratings: Mapped[list["Rating"]] = relationship(back_populates="book")
