@@ -8,10 +8,25 @@ from app.database import Base
 class User(Base):
     __tablename__ = "user"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    username: Mapped[str] = mapped_column(String, unique=True)
-    email: Mapped[str] = mapped_column(String, unique=True)
-    hashed_password: Mapped[str] = mapped_column(String)
+    id: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+        comment="Идентификатор пользователя"
+    )
+    username: Mapped[str] = mapped_column(
+        String,
+        unique=True,
+        comment="Уникальный юзернейм пользователя"
+    )
+    email: Mapped[str] = mapped_column(
+        String,
+        unique=True,
+        comment="Уникальная электронная почта пользователя"
+    )
+    hashed_password: Mapped[str] = mapped_column(
+        String,
+        comment="Хэш пароля пользователя"
+    )
 
     ratings: Mapped[list["Rating"]] = relationship(back_populates="user")
 

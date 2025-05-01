@@ -9,7 +9,9 @@ from app.models.user import User
 from app.schemas.user import UserCreate, Token, UserBase
 from app.security import authenticate_user, create_access_token, get_password_hash
 
-router = APIRouter(tags=["user"])
+router = APIRouter(
+    tags=["user"]
+)
 
 
 @router.post("/register")

@@ -9,7 +9,10 @@ class Book(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     title: Mapped[str] = mapped_column(String)
-    author_id: Mapped[int] = mapped_column(ForeignKey("author.id", onupdate="cascade", ondelete="cascade"))
+    author_id: Mapped[int] = mapped_column(
+        ForeignKey("author.id", onupdate="cascade", ondelete="cascade"),
+        index=True
+    )
     publication_year: Mapped[int] = mapped_column(Integer)
     average_rating: Mapped[float] = mapped_column(Float, default=0.0)
 
