@@ -1,8 +1,8 @@
 """Init tables
 
-Revision ID: 0322477da12c
+Revision ID: 863110f6881a
 Revises: 
-Create Date: 2025-05-01 18:06:48.146267
+Create Date: 2025-05-02 00:47:49.181286
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '0322477da12c'
+revision: str = '863110f6881a'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -29,16 +29,17 @@ def upgrade() -> None:
     )
     op.create_index('ix_author_lower_name', 'author', [sa.literal_column('lower(name)')], unique=True)
     op.create_table('genre',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('name', sa.String(), nullable=False),
-    sa.PrimaryKeyConstraint('id')
+    sa.Column('id', sa.Integer(), nullable=False, comment='Идентификатор жанра'),
+    sa.Column('name', sa.String(length=100), nullable=False, comment='Название жанра'),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('name')
     )
-    op.create_index(op.f('ix_genre_name'), 'genre', ['name'], unique=True)
+    op.create_index('ix_genre_lower_name', 'genre', [sa.literal_column('lower(name)')], unique=True)
     op.create_table('user',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('username', sa.String(), nullable=False),
-    sa.Column('email', sa.String(), nullable=False),
-    sa.Column('hashed_password', sa.String(), nullable=False),
+    sa.Column('id', sa.Integer(), nullable=False, comment='Идентификатор пользователя'),
+    sa.Column('username', sa.String(), nullable=False, comment='Уникальный юзернейм пользователя'),
+    sa.Column('email', sa.String(), nullable=False, comment='Уникальная электронная почта пользователя'),
+    sa.Column('hashed_password', sa.String(), nullable=False, comment='Хэш пароля пользователя'),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('email'),
     sa.UniqueConstraint('username')
@@ -81,7 +82,7 @@ def downgrade() -> None:
     op.drop_index(op.f('ix_book_author_id'), table_name='book')
     op.drop_table('book')
     op.drop_table('user')
-    op.drop_index(op.f('ix_genre_name'), table_name='genre')
+    op.drop_index('ix_genre_lower_name', table_name='genre')
     op.drop_table('genre')
     op.drop_index('ix_author_lower_name', table_name='author')
     op.drop_table('author')

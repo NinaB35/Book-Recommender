@@ -9,11 +9,18 @@ example_bio = """Джоан Роулинг — британская писате
 
 Во время поездки на поезде из Манчестера в Лондон в 1990 году у неё появилась идея романа о Гарри Поттере. В 1997 году был опубликован первый роман в серии — «Гарри Поттер и философский камень». Впоследствии Роулинг написала 6 сиквелов и 3 дополнения к этой серии."""
 
+name_pattern = "^[a-zA-Zа-яА-ЯёЁ -.]+$"
+
 
 class AuthorBase(BaseModel):
     name: Annotated[
         str,
-        Query(min_length=2, max_length=100, pattern="^[a-zA-Zа-яА-ЯёЁ -]+$", examples=["Джоан Кэтлин Роулинг"])
+        Query(
+            min_length=2,
+            max_length=100,
+            pattern=name_pattern,
+            examples=["Джоан Кэтлин Роулинг"]
+        )
     ]
     bio: Optional[Annotated[
         str,
@@ -30,7 +37,12 @@ class AuthorCreate(AuthorBase):
 class AuthorUpdate(AuthorBase):
     name: Optional[Annotated[
         str,
-        Query(min_length=2, max_length=100, pattern="^[a-zA-Zа-яА-ЯёЁ -]+$", examples=["Джоан Кэтлин Роулинг"])
+        Query(
+            min_length=2,
+            max_length=100,
+            pattern=name_pattern,
+            examples=["Джоан Кэтлин Роулинг"]
+        )
     ]] = None
 
 

@@ -9,3 +9,9 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
 EOSQL
 
 echo "Created user ${DB_USER}"
+
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
+    CREATE DATABASE ${TEST_DB_NAME} WITH OWNER ${DB_USER};
+EOSQL
+
+echo "Created user ${DB_USER}"

@@ -15,6 +15,9 @@ class Settings(BaseSettings):
     DB_NAME: str
     DB_URL: URL | None = None
 
+    TEST_DB_NAME: str
+    TEST_DB_URL: URL | None = None
+
     SECRET_KEY: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int
 
@@ -29,6 +32,14 @@ class Settings(BaseSettings):
             username=self.DB_USER,
             password=self.DB_PASS,
             database=self.DB_NAME
+        )
+        self.TEST_DB_URL = URL.create(
+            drivername="postgresql+asyncpg",
+            host=self.DB_HOST,
+            port=self.DB_PORT,
+            username=self.DB_USER,
+            password=self.DB_PASS,
+            database=self.TEST_DB_NAME
         )
 
 

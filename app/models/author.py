@@ -1,3 +1,5 @@
+from typing import Optional
+
 from sqlalchemy import Integer, String, func, Index
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -19,7 +21,7 @@ class Author(Base):
         nullable=False,
         comment="Полное имя автора"
     )
-    bio: Mapped[str | None] = mapped_column(
+    bio: Mapped[Optional[str]] = mapped_column(
         String(1000),
         nullable=True,
         comment="Биография автора"

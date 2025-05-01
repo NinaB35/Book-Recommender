@@ -1,12 +1,12 @@
 from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, status, Query, Body
+from fastapi import APIRouter, HTTPException, status, Body
 from sqlalchemy import select, func, update
 
 from app.database import AsyncDB
 from app.models.author import Author
 from app.models.book import Book
-from app.schemas import PrimaryKey
+from app.schemas import PrimaryKey, Skip, Limit
 from app.schemas.author import AuthorGet, AuthorCreate, AuthorUpdate
 
 router = APIRouter(
@@ -59,8 +59,8 @@ async def get_author(
 @router.get("/")
 async def get_authors(
         db: AsyncDB,
-        skip: Annotated[int, Query(ge=0)] = 0,
-        limit: Annotated[int, Query(ge=1, le=1000)] = 100
+        skip: Skip = 0,
+        limit: Limit = 100
 ) -> list[AuthorGet]:
     result = await db.execute(
         select(

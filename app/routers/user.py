@@ -2,9 +2,8 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status, Body
 from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.database import get_db
+from app.database import AsyncDB
 from app.models.user import User
 from app.schemas.user import UserCreate, Token, UserBase
 from app.security import authenticate_user, create_access_token, get_password_hash
@@ -17,7 +16,7 @@ router = APIRouter(
 @router.post("/register")
 async def register(
         user_data: Annotated[UserCreate, Body()],
-        db: Annotated[AsyncSession, Depends(get_db)]
+        db: AsyncDB
 ) -> UserBase:
     existing_email = await User.get_by_email(db, str(user_data.email))
     if existing_email is not None:
@@ -45,7 +44,7 @@ async def register(
 @router.post("/login")
 async def login(
         form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
-        db: Annotated[AsyncSession, Depends(get_db)]
+        db: AsyncDB
 ) -> Token:
     user = await authenticate_user(db, form_data.username, form_data.password)
     if not user:
