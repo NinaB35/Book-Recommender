@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from database import Base
+from app.database import Base
 
 
 class Genre(Base):
@@ -10,6 +10,6 @@ class Genre(Base):
     name: Mapped[str] = mapped_column(unique=True, index=True)
 
     books: Mapped[list["Book"]] = relationship(
-        secondary="book_genres",
+        secondary="book_genre",
         back_populates="genres"
     )

@@ -26,8 +26,8 @@ services:
     build: .
     image: backend:latest
     container_name: backend
-    user: my_user
-    command: "fastapi run main.py"
+#    user: my_user
+    command: "fastapi run app/main.py"
     env_file:
       - env/app.env
     ports:

@@ -3,7 +3,7 @@ from typing import Optional
 from sqlalchemy import Integer, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from database import Base
+from app.database import Base
 
 
 class Rating(Base):
