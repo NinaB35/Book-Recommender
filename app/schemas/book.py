@@ -5,6 +5,7 @@ from pydantic import BaseModel, ConfigDict
 
 from .author import AuthorGet
 from .genre import GenreGet
+from .rating import RatingGet
 
 
 class BookBase(BaseModel):
@@ -65,7 +66,7 @@ class BookGet(BaseModel):
     ]
     author: "AuthorGet"
     genres: List["GenreGet"]
-    # ratings: List["RatingGet"]
+    ratings: List["RatingGet"]
     average_rating: float
 
     model_config = ConfigDict(from_attributes=True)
