@@ -1,3 +1,5 @@
+from typing import Optional
+
 from sqlalchemy import Integer, String, Float, ForeignKey, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, mapped_column, relationship, selectinload
@@ -6,6 +8,8 @@ from .base import Base
 
 
 class Book(Base):
+    """Модель книги."""
+
     __tablename__ = "book"
 
     id: Mapped[int] = mapped_column(
@@ -40,7 +44,14 @@ class Book(Base):
     ratings: Mapped[list["Rating"]] = relationship(back_populates="book")
 
     @classmethod
-    async def get_by_id_full(cls, db: AsyncSession, book_id: int):
+    async def get_by_id_full(cls, db: AsyncSession, book_id: int) -> Optional["Book"]:
+        """
+        Полное получение книги с автором, жанрами и рейтингами.
+
+        :param db: Сессия базы данных.
+        :param book_id: Идентификатор книги.
+        :return: Объект книги.
+        """
         result = await db.execute(
             select(cls)
             .options(

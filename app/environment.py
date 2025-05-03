@@ -8,6 +8,10 @@ logger = logging.getLogger(__name__)
 
 
 class Settings(BaseSettings):
+    """
+    Основной класс настроек приложения.
+    """
+
     DB_USER: str
     DB_PASS: str
     DB_HOST: str

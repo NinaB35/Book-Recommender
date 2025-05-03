@@ -69,3 +69,12 @@ class BookGet(BaseModel):
     average_rating: float
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class BookGetQuery(BaseModel):
+    skip: Annotated[int, Query(ge=0)] = 0
+    limit: Annotated[int, Query(ge=1, le=1000)] = 100
+    author_id: Optional[Annotated[int, Query(ge=1)]] = None
+    genre_id: Optional[Annotated[int, Query(ge=1)]] = None
+    year_from: Optional[Annotated[int, Query(ge=1000)]] = None
+    year_to: Optional[Annotated[int, Query(le=2100)]] = None

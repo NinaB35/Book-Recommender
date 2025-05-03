@@ -9,6 +9,8 @@ from .base import Base
 
 
 class Author(Base):
+    """Модель автора книги."""
+
     __tablename__ = "author"
 
     id: Mapped[int] = mapped_column(
@@ -39,6 +41,13 @@ class Author(Base):
     )
 
     @classmethod
-    async def get_by_name(cls, db: AsyncSession, name: str):
+    async def get_by_name(cls, db: AsyncSession, name: str) -> Optional["Author"]:
+        """
+        Получение автора по имени.
+
+        :param db: Сессия базы данных.
+        :param name: Имя автора.
+        :return: Объект автора.
+        """
         result = await db.execute(select(cls).where(func.lower(cls.name) == func.lower(name)))
         return result.scalar_one_or_none()

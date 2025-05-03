@@ -1,3 +1,5 @@
+from typing import Optional
+
 from sqlalchemy import Integer, String, Index, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -6,6 +8,8 @@ from .base import Base
 
 
 class Genre(Base):
+    """Модель жанра."""
+
     __tablename__ = "genre"
 
     id: Mapped[int] = mapped_column(
@@ -33,6 +37,13 @@ class Genre(Base):
     )
 
     @classmethod
-    async def get_by_name(cls, db: AsyncSession, name: str):
+    async def get_by_name(cls, db: AsyncSession, name: str) -> Optional["Genre"]:
+        """
+        Получение жанра по названию.
+
+        :param db: Сессия базы данных.
+        :param name: Название жанра.
+        :return: Объект жанра.
+        """
         result = await db.execute(select(cls).where(func.lower(cls.name) == func.lower(name)))
         return result.scalar_one_or_none()

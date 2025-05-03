@@ -5,6 +5,8 @@ from .base import Base
 
 
 class BookGenre(Base):
+    """Вспомогательная модель для связи книги и жанра."""
+
     __tablename__ = "book_genre"
 
     book_id: Mapped[int] = mapped_column(

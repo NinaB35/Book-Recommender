@@ -1,4 +1,4 @@
-from typing import Annotated, List, Optional
+from typing import Annotated, List
 
 from fastapi import APIRouter, HTTPException, status, Query, Body
 from sqlalchemy import select, delete, update
@@ -7,7 +7,7 @@ from sqlalchemy.orm import selectinload
 from app.database import AsyncDB
 from app.models import Book, BookGenre, Author, Genre
 from app.schemas import PrimaryKey
-from app.schemas.book import BookGet, BookCreate, BookUpdate
+from app.schemas.book import BookGet, BookCreate, BookUpdate, BookGetQuery
 
 router = APIRouter(
     prefix="/books",
@@ -69,12 +69,7 @@ async def get_book(
 @router.get("/")
 async def get_books(
         db: AsyncDB,
-        skip: Annotated[int, Query(ge=0)] = 0,
-        limit: Annotated[int, Query(ge=1, le=1000)] = 100,
-        author_id: Annotated[Optional[int], Query(ge=1)] = None,
-        genre_id: Annotated[Optional[int], Query(ge=1)] = None,
-        year_from: Annotated[Optional[int], Query(ge=1000)] = None,
-        year_to: Annotated[Optional[int], Query(le=2100)] = None
+        params: Annotated[BookGetQuery, Query()],
 ) -> List[BookGet]:
     query = (
         select(Book)
@@ -84,18 +79,18 @@ async def get_books(
             selectinload(Book.ratings)
         )
     )
-    if author_id is not None:
-        query = query.where(Book.author_id == author_id)
-    if genre_id is not None:
-        query = query.join(Book.genres).where(Genre.id == genre_id)
-    if year_from is not None:
-        query = query.where(Book.publication_year >= year_from)
-    if year_to is not None:
-        query = query.where(Book.publication_year <= year_to)
+    if params.author_id is not None:
+        query = query.where(Book.author_id == params.author_id)
+    if params.genre_id is not None:
+        query = query.join(Book.genres).where(Genre.id == params.genre_id)
+    if params.year_from is not None:
+        query = query.where(Book.publication_year >= params.year_from)
+    if params.year_to is not None:
+        query = query.where(Book.publication_year <= params.year_to)
     books = await db.execute(
         query
-        .offset(skip)
-        .limit(limit)
+        .offset(params.skip)
+        .limit(params.limit)
     )
     books = books.scalars().all()
     return [BookGet.model_validate(book) for book in books]

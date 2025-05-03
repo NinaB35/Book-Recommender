@@ -42,7 +42,7 @@ async def get_author(
     author = await db.execute(
         select(
             Author,
-            func.count(Book.id).label("books_count")
+            func.count(Book.id).label("books_count")  # pylint: disable=not-callable
         )
         .outerjoin(Book, Author.id == Book.author_id)
         .where(Author.id == author_id)
@@ -66,7 +66,7 @@ async def get_authors(
     authors = await db.execute(
         select(
             Author,
-            func.count(Book.id).label("books_count")
+            func.count(Book.id).label("books_count")  # pylint: disable=not-callable
         )
         .outerjoin(Book, Author.id == Book.author_id)
         .group_by(Author.id)

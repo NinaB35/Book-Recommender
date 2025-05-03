@@ -7,6 +7,8 @@ from .base import Base
 
 
 class Rating(Base):
+    """Модель рейтинга книги."""
+
     __tablename__ = "rating"
 
     id: Mapped[int] = mapped_column(
@@ -38,7 +40,15 @@ class Rating(Base):
     book: Mapped["Book"] = relationship(back_populates="ratings")
 
     @classmethod
-    async def get_by_user_and_book(cls, db, user_id: int, book_id: int):
+    async def get_by_user_and_book(cls, db, user_id: int, book_id: int) -> Optional["Rating"]:
+        """
+        Получение рейтинга книги по идентификатору пользователя и книги.
+
+        :param db: Сессия базы данных.
+        :param user_id: Идентификатор пользователя.
+        :param book_id: Идентификатор книги.
+        :return: Объект рейтинга.
+        """
         result = await db.execute(
             select(cls)
             .where(cls.user_id == user_id)
