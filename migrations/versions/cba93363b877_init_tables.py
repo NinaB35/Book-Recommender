@@ -1,8 +1,8 @@
 """Init tables
 
-Revision ID: 863110f6881a
+Revision ID: cba93363b877
 Revises: 
-Create Date: 2025-05-02 00:47:49.181286
+Create Date: 2025-05-03 16:33:18.732001
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '863110f6881a'
+revision: str = 'cba93363b877'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -45,18 +45,18 @@ def upgrade() -> None:
     sa.UniqueConstraint('username')
     )
     op.create_table('book',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('title', sa.String(), nullable=False),
-    sa.Column('author_id', sa.Integer(), nullable=False),
-    sa.Column('publication_year', sa.Integer(), nullable=False),
-    sa.Column('average_rating', sa.Float(), nullable=False),
+    sa.Column('id', sa.Integer(), nullable=False, comment='Идентификатор книги'),
+    sa.Column('title', sa.String(length=100), nullable=False, comment='Название книги'),
+    sa.Column('author_id', sa.Integer(), nullable=False, comment='Идентификатор автора'),
+    sa.Column('publication_year', sa.Integer(), nullable=False, comment='Год издания'),
+    sa.Column('average_rating', sa.Float(), nullable=False, comment='Средний рейтинг книги'),
     sa.ForeignKeyConstraint(['author_id'], ['author.id'], onupdate='cascade', ondelete='cascade'),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_book_author_id'), 'book', ['author_id'], unique=False)
     op.create_table('book_genre',
-    sa.Column('book_id', sa.Integer(), nullable=False),
-    sa.Column('genre_id', sa.Integer(), nullable=False),
+    sa.Column('book_id', sa.Integer(), nullable=False, comment='Идентификатор книги'),
+    sa.Column('genre_id', sa.Integer(), nullable=False, comment='Идентификатор жанра'),
     sa.ForeignKeyConstraint(['book_id'], ['book.id'], onupdate='cascade', ondelete='cascade'),
     sa.ForeignKeyConstraint(['genre_id'], ['genre.id'], onupdate='cascade', ondelete='cascade'),
     sa.PrimaryKeyConstraint('book_id', 'genre_id')

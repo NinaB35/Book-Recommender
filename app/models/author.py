@@ -18,7 +18,6 @@ class Author(Base):
     )
     name: Mapped[str] = mapped_column(
         String(100),
-        nullable=False,
         comment="Полное имя автора"
     )
     bio: Mapped[Optional[str]] = mapped_column(
@@ -38,11 +37,6 @@ class Author(Base):
             unique=True
         ),
     )
-
-    @classmethod
-    async def get_by_id(cls, db: AsyncSession, author_id: int):
-        result = await db.execute(select(cls).where(cls.id == author_id))
-        return result.scalar_one_or_none()
 
     @classmethod
     async def get_by_name(cls, db: AsyncSession, name: str):

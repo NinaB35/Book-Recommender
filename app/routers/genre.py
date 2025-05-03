@@ -4,7 +4,7 @@ from fastapi import APIRouter, HTTPException, status, Body
 from sqlalchemy import select, update
 
 from app.database import AsyncDB
-from app.models.genre import Genre
+from app.models import Genre
 from app.schemas import PrimaryKey, Skip, Limit
 from app.schemas.genre import GenreGet, GenreCreate, GenreUpdate
 
@@ -20,17 +20,17 @@ async def create_genre(
         db: AsyncDB
 ) -> GenreGet:
     existing_genre = await Genre.get_by_name(db, genre_data.name)
-    if existing_genre:
+    if existing_genre is not None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Genre with this name already exists"
         )
-
-    new_genre = Genre(name=genre_data.name)
-    db.add(new_genre)
+    genre = Genre(name=genre_data.name)
+    db.add(genre)
+    await db.refresh(genre)
+    genre = GenreGet.model_validate(genre)
     await db.commit()
-    await db.refresh(new_genre)
-    return GenreGet.model_validate(new_genre)
+    return genre
 
 
 @router.get("/{genre_id}")
@@ -44,6 +44,7 @@ async def get_genre(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Genre not found"
         )
+    genre = GenreGet.model_validate(genre)
     return genre
 
 
@@ -53,12 +54,14 @@ async def get_genres(
         skip: Skip = 0,
         limit: Limit = 100
 ) -> list[GenreGet]:
-    result = await db.execute(
+    genres = await db.execute(
         select(Genre)
         .offset(skip)
         .limit(limit)
     )
-    return result.scalars().all()
+    genres = genres.scalars().all()
+    genres = [GenreGet.model_validate(genre) for genre in genres]
+    return genres
 
 
 @router.put("/{genre_id}")
@@ -68,7 +71,7 @@ async def update_genre(
         db: AsyncDB
 ) -> GenreGet:
     genre = await Genre.get_by_id(db, genre_id)
-    if not genre:
+    if genre is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Genre not found"
@@ -90,6 +93,7 @@ async def update_genre(
         .returning(Genre)
     )
     genre = genre.scalar_one()
+    genre = GenreGet.model_validate(genre)
     await db.commit()
     return GenreGet.model_validate(genre)
 

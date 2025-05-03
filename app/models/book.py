@@ -1,5 +1,6 @@
-from sqlalchemy import Integer, String, Float, ForeignKey
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import Integer, String, Float, ForeignKey, select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Mapped, mapped_column, relationship, selectinload
 
 from .base import Base
 
@@ -7,14 +8,29 @@ from .base import Base
 class Book(Base):
     __tablename__ = "book"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    title: Mapped[str] = mapped_column(String)
+    id: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+        comment="Идентификатор книги"
+    )
+    title: Mapped[str] = mapped_column(
+        String(100),
+        comment="Название книги"
+    )
     author_id: Mapped[int] = mapped_column(
         ForeignKey("author.id", onupdate="cascade", ondelete="cascade"),
-        index=True
+        index=True,
+        comment="Идентификатор автора"
     )
-    publication_year: Mapped[int] = mapped_column(Integer)
-    average_rating: Mapped[float] = mapped_column(Float, default=0.0)
+    publication_year: Mapped[int] = mapped_column(
+        Integer,
+        comment="Год издания"
+    )
+    average_rating: Mapped[float] = mapped_column(
+        Float,
+        default=0.0,
+        comment="Средний рейтинг книги"
+    )
 
     author: Mapped["Author"] = relationship(back_populates="books")
     genres: Mapped[list["Genre"]] = relationship(
@@ -22,3 +38,15 @@ class Book(Base):
         back_populates="books"
     )
     ratings: Mapped[list["Rating"]] = relationship(back_populates="book")
+
+    @classmethod
+    async def get_by_id_full(cls, db: AsyncSession, book_id: int):
+        result = await db.execute(
+            select(cls)
+            .options(
+                selectinload(cls.author),
+                selectinload(cls.genres),
+                selectinload(cls.ratings)
+            )
+            .where(cls.id == book_id))
+        return result.scalar_one_or_none()

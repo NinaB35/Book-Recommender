@@ -33,11 +33,6 @@ class Genre(Base):
     )
 
     @classmethod
-    async def get_by_id(cls, db: AsyncSession, genre_id: int):
-        result = await db.execute(select(cls).where(cls.id == genre_id))
-        return result.scalar_one_or_none()
-
-    @classmethod
     async def get_by_name(cls, db: AsyncSession, name: str):
         result = await db.execute(select(cls).where(func.lower(cls.name) == func.lower(name)))
         return result.scalar_one_or_none()

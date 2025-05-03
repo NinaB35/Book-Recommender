@@ -9,9 +9,11 @@ class BookGenre(Base):
 
     book_id: Mapped[int] = mapped_column(
         ForeignKey("book.id", onupdate="cascade", ondelete="cascade"),
-        primary_key=True
+        primary_key=True,
+        comment="Идентификатор книги"
     )
     genre_id: Mapped[int] = mapped_column(
         ForeignKey("genre.id", onupdate="cascade", ondelete="cascade"),
-        primary_key=True
+        primary_key=True,
+        comment="Идентификатор жанра"
     )

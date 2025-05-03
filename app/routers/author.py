@@ -4,8 +4,7 @@ from fastapi import APIRouter, HTTPException, status, Body
 from sqlalchemy import select, func, update
 
 from app.database import AsyncDB
-from app.models.author import Author
-from app.models.book import Book
+from app.models import Author, Book
 from app.schemas import PrimaryKey, Skip, Limit
 from app.schemas.author import AuthorGet, AuthorCreate, AuthorUpdate
 
@@ -26,11 +25,12 @@ async def create_author(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Author with this name already exists"
         )
-    new_author = Author(name=author_data.name, bio=author_data.bio)
-    db.add(new_author)
+    author = Author(name=author_data.name, bio=author_data.bio)
+    db.add(author)
+    await db.refresh(author)
+    author = AuthorGet.model_validate(author)
     await db.commit()
-    await db.refresh(new_author)
-    return AuthorGet.model_validate(new_author)
+    return author
 
 
 @router.get("/{author_id}")
@@ -53,6 +53,7 @@ async def get_author(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Author not found"
         )
+    author = AuthorGet.model_validate(author)
     return author
 
 
@@ -62,7 +63,7 @@ async def get_authors(
         skip: Skip = 0,
         limit: Limit = 100
 ) -> list[AuthorGet]:
-    result = await db.execute(
+    authors = await db.execute(
         select(
             Author,
             func.count(Book.id).label("books_count")
@@ -72,7 +73,9 @@ async def get_authors(
         .offset(skip)
         .limit(limit)
     )
-    return result.scalars().all()
+    authors = authors.scalars().all()
+    authors = [AuthorGet.model_validate(author) for author in authors]
+    return authors
 
 
 @router.put("/{author_id}")
@@ -110,6 +113,7 @@ async def update_author(
         .returning(Author)
     )
     author = author.scalar_one()
+    author = AuthorGet.model_validate(author)
     await db.commit()
     return author
 

@@ -31,11 +31,6 @@ class User(Base):
     ratings: Mapped[list["Rating"]] = relationship(back_populates="user")
 
     @classmethod
-    async def get_by_id(cls, db: AsyncSession, user_id: int):
-        result = await db.execute(select(cls).where(cls.id == user_id))
-        return result.scalar_one_or_none()
-
-    @classmethod
     async def get_by_username(cls, db: AsyncSession, username: str):
         result = await db.execute(select(cls).where(cls.username == username))
         return result.scalar_one_or_none()
