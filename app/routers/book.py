@@ -123,6 +123,11 @@ async def update_book(
             detail="No data to update"
         )
 
+    book_update_data = {}
+    if "title" in update_data:
+        book_update_data["title"] = update_data["title"]
+    if "publication_year" in update_data:
+        book_update_data["publication_year"] = update_data["publication_year"]
     if "author_id" in update_data:
         author = await Author.get_by_id(db, update_data["author_id"])
         if author is None:
@@ -130,11 +135,12 @@ async def update_book(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Author not found"
             )
+        book_update_data["author_id"] = update_data["author_id"]
 
     book = await db.execute(
         update(Book)
         .where(Book.id == book_id)
-        .values(update_data)
+        .values(book_update_data)
         .returning(Book)
     )
     book.scalar_one()

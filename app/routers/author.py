@@ -27,6 +27,7 @@ async def create_author(
         )
     author = Author(name=author_data.name, bio=author_data.bio)
     db.add(author)
+    await db.flush()
     await db.refresh(author)
     author = AuthorGet.model_validate(author)
     await db.commit()

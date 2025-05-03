@@ -27,6 +27,7 @@ async def create_genre(
         )
     genre = Genre(name=genre_data.name)
     db.add(genre)
+    await db.flush()
     await db.refresh(genre)
     genre = GenreGet.model_validate(genre)
     await db.commit()
