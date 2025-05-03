@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     TEST_DB_URL: URL | None = None
 
     SECRET_KEY: str
+    ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int
 
     model_config = SettingsConfigDict(env_file="env/app.env")

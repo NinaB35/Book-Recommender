@@ -5,8 +5,8 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 from app.database import AsyncDB
 from app.models.user import User
-from app.schemas.user import UserCreate, Token, UserBase
-from app.security import authenticate_user, create_access_token, get_password_hash
+from app.schemas.user import UserCreate, Token, UserGet
+from app.security import authenticate_user, create_access_token, get_password_hash, CurrentUser
 
 router = APIRouter(
     tags=["user"]
@@ -17,7 +17,7 @@ router = APIRouter(
 async def register(
         user_data: Annotated[UserCreate, Body()],
         db: AsyncDB
-) -> UserBase:
+) -> UserGet:
     existing_email = await User.get_by_email(db, str(user_data.email))
     if existing_email is not None:
         raise HTTPException(
@@ -31,14 +31,17 @@ async def register(
             detail="Username already taken"
         )
     hashed_password = get_password_hash(user_data.password)
-    new_user = User(
+    user = User(
         username=user_data.username,
         email=str(user_data.email),
         hashed_password=hashed_password
     )
-    db.add(new_user)
+    db.add(user)
+    await db.flush()
+    await db.refresh(user)
+    user = UserGet.model_validate(user)
     await db.commit()
-    return UserBase.model_validate(new_user)
+    return user
 
 
 @router.post("/login")
@@ -47,13 +50,18 @@ async def login(
         db: AsyncDB
 ) -> Token:
     user = await authenticate_user(db, form_data.username, form_data.password)
-    if not user:
+    if user is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-
-    access_token = create_access_token(data={"sub": user.id})
-
+    access_token = create_access_token({"sub": str(user.id)})
     return Token(access_token=access_token, token_type="bearer")
+
+
+@router.get("/me")
+async def users_me(
+        current_user: CurrentUser,
+) -> UserGet:
+    return UserGet.model_validate(current_user)

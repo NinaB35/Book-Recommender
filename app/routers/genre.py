@@ -45,8 +45,7 @@ async def get_genre(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Genre not found"
         )
-    genre = GenreGet.model_validate(genre)
-    return genre
+    return GenreGet.model_validate(genre)
 
 
 @router.get("/")
@@ -61,8 +60,7 @@ async def get_genres(
         .limit(limit)
     )
     genres = genres.scalars().all()
-    genres = [GenreGet.model_validate(genre) for genre in genres]
-    return genres
+    return [GenreGet.model_validate(genre) for genre in genres]
 
 
 @router.put("/{genre_id}")
@@ -110,6 +108,5 @@ async def delete_genre(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Genre not found"
         )
-
     await db.delete(genre)
     await db.commit()

@@ -27,3 +27,7 @@ class Token(BaseModel):
     token_type: str
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class UserGet(UserBase):
+    id: int

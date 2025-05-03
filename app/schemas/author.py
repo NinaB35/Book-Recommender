@@ -11,6 +11,10 @@ example_bio = """Джоан Роулинг — британская писате
 
 name_pattern = "^[a-zA-Zа-яА-ЯёЁ -.]+$"
 
+example_bio2 = """Джордж Рэймонд Ричард Мартин — американский писатель-фантаст, сценарист, продюсер и редактор. В 1970–1980-е годы получил известность благодаря рассказам и повестям в жанре научной фантастики, литературы ужасов и фэнтези.
+
+Славу ему принёс выходящий с 1996 года фэнтезийный цикл «Песнь Льда и Огня», позднее экранизированный компанией HBO в виде популярного телесериала «Игра престолов»."""
+
 
 class AuthorBase(BaseModel):
     name: Annotated[
@@ -34,16 +38,22 @@ class AuthorCreate(AuthorBase):
     pass
 
 
-class AuthorUpdate(AuthorBase):
+class AuthorUpdate(BaseModel):
     name: Optional[Annotated[
         str,
         Query(
             min_length=2,
             max_length=100,
             pattern=name_pattern,
-            examples=["Джоан Кэтлин Роулинг"]
+            examples=["Джордж Р. Р. Мартин"]
         )
     ]] = None
+    bio: Optional[Annotated[
+        str,
+        Query(max_length=1000, examples=[example_bio2])
+    ]] = None
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class AuthorGet(AuthorBase):

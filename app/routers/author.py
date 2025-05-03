@@ -54,8 +54,7 @@ async def get_author(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Author not found"
         )
-    author = AuthorGet.model_validate(author)
-    return author
+    return AuthorGet.model_validate(author)
 
 
 @router.get("/")
@@ -75,8 +74,7 @@ async def get_authors(
         .limit(limit)
     )
     authors = authors.scalars().all()
-    authors = [AuthorGet.model_validate(author) for author in authors]
-    return authors
+    return [AuthorGet.model_validate(author) for author in authors]
 
 
 @router.put("/{author_id}")
@@ -130,6 +128,5 @@ async def delete_author(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Author not found"
         )
-
     await db.delete(author)
     await db.commit()

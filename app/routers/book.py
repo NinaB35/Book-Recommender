@@ -63,8 +63,7 @@ async def get_book(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Book not found"
         )
-    book = BookGet.model_validate(book)
-    return book
+    return BookGet.model_validate(book)
 
 
 @router.get("/")
@@ -99,8 +98,7 @@ async def get_books(
         .limit(limit)
     )
     books = books.scalars().all()
-    books = [BookGet.model_validate(book) for book in books]
-    return books
+    return [BookGet.model_validate(book) for book in books]
 
 
 @router.put("/{book_id}")
