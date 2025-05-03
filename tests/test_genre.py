@@ -42,7 +42,6 @@ async def test_get_genre(test_client: AsyncClient):
     assert response.status_code == 200
     assert response.json()["id"] == genre_id
     assert response.json()["name"] == genre_data["name"]
-    assert "books_count" in response.json()
 
     response = await test_client.get("/genres/9999")
     assert response.status_code == 404
@@ -83,7 +82,7 @@ async def test_update_genre(test_client: AsyncClient):
     assert response.status_code == 422
 
     response = await test_client.put(f"/genres/{genre_id}", json={})
-    assert response.status_code == 400
+    assert response.status_code == 422
 
 
 @pytest.mark.asyncio

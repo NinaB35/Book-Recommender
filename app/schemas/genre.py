@@ -22,10 +22,9 @@ class GenreCreate(GenreBase):
     pass
 
 
-class GenreUpdate(BaseModel):
+class GenreUpdate(GenreBase):
     pass
 
 
 class GenreGet(GenreBase):
     id: int
-    books_count: int = 0

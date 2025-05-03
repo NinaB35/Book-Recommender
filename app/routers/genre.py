@@ -1,10 +1,9 @@
 from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, status, Body
-from sqlalchemy import select, func, update
+from sqlalchemy import select, update
 
 from app.database import AsyncDB
-from app.models.book import Book
 from app.models.genre import Genre
 from app.schemas import PrimaryKey, Skip, Limit
 from app.schemas.genre import GenreGet, GenreCreate, GenreUpdate
@@ -39,16 +38,7 @@ async def get_genre(
         genre_id: PrimaryKey,
         db: AsyncDB
 ) -> GenreGet:
-    genre = await db.execute(
-        select(
-            Genre,
-            func.count(Book.id).label("books_count")
-        )
-        .outerjoin(Book.genres)
-        .where(Genre.id == genre_id)
-        .group_by(Genre.id)
-    )
-    genre = genre.scalar_one_or_none()
+    genre = await Genre.get_by_id(db, genre_id)
     if genre is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -64,12 +54,7 @@ async def get_genres(
         limit: Limit = 100
 ) -> list[GenreGet]:
     result = await db.execute(
-        select(
-            Genre,
-            func.count(Book.id).label("books_count")
-        )
-        .outerjoin(Book.genres)
-        .group_by(Genre.id)
+        select(Genre)
         .offset(skip)
         .limit(limit)
     )
