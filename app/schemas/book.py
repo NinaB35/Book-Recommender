@@ -64,9 +64,9 @@ class BookGet(BaseModel):
         int,
         Query(ge=1000, le=2100, examples=[1997])
     ]
-    author: "AuthorGet"
-    genres: List["GenreGet"]
-    ratings: List["RatingGet"]
+    author: AuthorGet
+    genres: List[GenreGet]
+    ratings: List[RatingGet]
     average_rating: float
 
     model_config = ConfigDict(from_attributes=True)
