@@ -115,6 +115,7 @@ async def test_update_author(test_client: AsyncClient, admin_token: str):
 
     response = await test_client.put(f"/authors/{author_id}", json={}, headers=auth_headers(admin_token))
     assert response.status_code == 400
+    assert response.json()["detail"] == "No data to update"
 
 
 @pytest.mark.asyncio
@@ -130,3 +131,11 @@ async def test_delete_author(test_client: AsyncClient, admin_token: str):
 
     response = await test_client.delete("/authors/9999", headers=auth_headers(admin_token))
     assert response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_create_author_empty_bio(test_client: AsyncClient, admin_token: str):
+    data = {"name": "Новый автор", "bio": ""}
+    response = await test_client.post("/authors/", json=data, headers=auth_headers(admin_token))
+    assert response.status_code == 201
+    assert response.json()["bio"] == ""
