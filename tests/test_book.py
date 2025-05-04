@@ -1,6 +1,8 @@
 import pytest
 from httpx import AsyncClient
 
+from tests.conftest import auth_headers
+
 book_data = {
     "title": "Гарри Поттер и философский камень",
     "publication_year": 1997,
@@ -27,16 +29,30 @@ partial_update_data = {
 
 
 @pytest.mark.asyncio
-async def test_create_book(test_client: AsyncClient):
-    author = await test_client.post("/authors/", json={"name": "Джоан Роулинг"})
-    genre1 = await test_client.post("/genres/", json={"name": "Фэнтези"})
-    genre2 = await test_client.post("/genres/", json={"name": "Приключения"})
+async def test_create_author_unauthorized(test_client: AsyncClient, admin_token: str):
+    author = await test_client.post("/authors/", json={"name": "Джоан Роулинг"}, headers=auth_headers(admin_token))
+    genre1 = await test_client.post("/genres/", json={"name": "Фэнтези"}, headers=auth_headers(admin_token))
+    genre2 = await test_client.post("/genres/", json={"name": "Приключения"}, headers=auth_headers(admin_token))
 
     data = book_data.copy()
     data["author_id"] = author.json()["id"]
     data["genre_ids"] = [genre1.json()["id"], genre2.json()["id"]]
 
     response = await test_client.post("/books/", json=data)
+    assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_create_book(test_client: AsyncClient, admin_token: str):
+    author = await test_client.post("/authors/", json={"name": "Джоан Роулинг"}, headers=auth_headers(admin_token))
+    genre1 = await test_client.post("/genres/", json={"name": "Фэнтези"}, headers=auth_headers(admin_token))
+    genre2 = await test_client.post("/genres/", json={"name": "Приключения"}, headers=auth_headers(admin_token))
+
+    data = book_data.copy()
+    data["author_id"] = author.json()["id"]
+    data["genre_ids"] = [genre1.json()["id"], genre2.json()["id"]]
+
+    response = await test_client.post("/books/", json=data, headers=auth_headers(admin_token))
     assert response.status_code == 201
     result = response.json()
     assert result["title"] == data["title"]
@@ -48,31 +64,31 @@ async def test_create_book(test_client: AsyncClient):
 
     invalid_data = data.copy()
     invalid_data["author_id"] = 9999
-    response = await test_client.post("/books/", json=invalid_data)
+    response = await test_client.post("/books/", json=invalid_data, headers=auth_headers(admin_token))
     assert response.status_code == 404
     assert "Author not found" in response.json()["detail"]
 
     invalid_data = data.copy()
     invalid_data["genre_ids"] = [9999]
-    response = await test_client.post("/books/", json=invalid_data)
+    response = await test_client.post("/books/", json=invalid_data, headers=auth_headers(admin_token))
     assert response.status_code == 404
     assert "genres not found" in response.json()["detail"]
 
-    response = await test_client.post("/books/", json=invalid_book_data)
+    response = await test_client.post("/books/", json=invalid_book_data, headers=auth_headers(admin_token))
     assert response.status_code == 422
 
 
 @pytest.mark.asyncio
-async def test_get_book(test_client: AsyncClient):
-    author = await test_client.post("/authors/", json={"name": "Джоан Роулинг"})
-    genre1 = await test_client.post("/genres/", json={"name": "Фэнтези"})
-    genre2 = await test_client.post("/genres/", json={"name": "Приключения"})
+async def test_get_book(test_client: AsyncClient, admin_token: str):
+    author = await test_client.post("/authors/", json={"name": "Джоан Роулинг"}, headers=auth_headers(admin_token))
+    genre1 = await test_client.post("/genres/", json={"name": "Фэнтези"}, headers=auth_headers(admin_token))
+    genre2 = await test_client.post("/genres/", json={"name": "Приключения"}, headers=auth_headers(admin_token))
 
     data = book_data.copy()
     data["author_id"] = author.json()["id"]
     data["genre_ids"] = [genre1.json()["id"], genre2.json()["id"]]
 
-    create_resp = await test_client.post("/books/", json=data)
+    create_resp = await test_client.post("/books/", json=data, headers=auth_headers(admin_token))
     book_id = create_resp.json()["id"]
 
     response = await test_client.get(f"/books/{book_id}")
@@ -89,11 +105,11 @@ async def test_get_book(test_client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_get_books_list(test_client: AsyncClient):
-    author1 = await test_client.post("/authors/", json={"name": "Джоан Роулинг"})
-    author2 = await test_client.post("/authors/", json={"name": "Дж. Р. Р. Толкин"})
-    genre1 = await test_client.post("/genres/", json={"name": "Фэнтези"})
-    genre2 = await test_client.post("/genres/", json={"name": "Приключения"})
+async def test_get_books_list(test_client: AsyncClient, admin_token: str):
+    author1 = await test_client.post("/authors/", json={"name": "Джоан Роулинг"}, headers=auth_headers(admin_token))
+    author2 = await test_client.post("/authors/", json={"name": "Дж. Р. Р. Толкин"}, headers=auth_headers(admin_token))
+    genre1 = await test_client.post("/genres/", json={"name": "Фэнтези"}, headers=auth_headers(admin_token))
+    genre2 = await test_client.post("/genres/", json={"name": "Приключения"}, headers=auth_headers(admin_token))
 
     books_data = [
         {
@@ -111,7 +127,7 @@ async def test_get_books_list(test_client: AsyncClient):
     ]
 
     for book in books_data:
-        await test_client.post("/books/", json=book)
+        await test_client.post("/books/", json=book, headers=auth_headers(admin_token))
 
     response = await test_client.get("/books/")
     assert response.status_code == 200
@@ -137,25 +153,25 @@ async def test_get_books_list(test_client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_update_book(test_client: AsyncClient):
-    author1 = await test_client.post("/authors/", json={"name": "Джоан Роулинг"})
-    author2 = await test_client.post("/authors/", json={"name": "Дж. Р. Р. Толкин"})
-    genre1 = await test_client.post("/genres/", json={"name": "Фэнтези"})
-    genre2 = await test_client.post("/genres/", json={"name": "Приключения"})
-    genre3 = await test_client.post("/genres/", json={"name": "Детская литература"})
+async def test_update_book(test_client: AsyncClient, admin_token: str):
+    author1 = await test_client.post("/authors/", json={"name": "Джоан Роулинг"}, headers=auth_headers(admin_token))
+    author2 = await test_client.post("/authors/", json={"name": "Дж. Р. Р. Толкин"}, headers=auth_headers(admin_token))
+    genre1 = await test_client.post("/genres/", json={"name": "Фэнтези"}, headers=auth_headers(admin_token))
+    genre2 = await test_client.post("/genres/", json={"name": "Приключения"}, headers=auth_headers(admin_token))
+    genre3 = await test_client.post("/genres/", json={"name": "Детская литература"}, headers=auth_headers(admin_token))
 
     data = book_data.copy()
     data["author_id"] = author1.json()["id"]
     data["genre_ids"] = [genre1.json()["id"], genre2.json()["id"]]
 
-    create_resp = await test_client.post("/books/", json=data)
+    create_resp = await test_client.post("/books/", json=data, headers=auth_headers(admin_token))
     book_id = create_resp.json()["id"]
 
     update_data = update_book_data.copy()
     update_data["author_id"] = author2.json()["id"]
     update_data["genre_ids"] = [genre2.json()["id"], genre3.json()["id"]]
 
-    response = await test_client.put(f"/books/{book_id}", json=update_data)
+    response = await test_client.put(f"/books/{book_id}", json=update_data, headers=auth_headers(admin_token))
     assert response.status_code == 200
     result = response.json()
     assert result["title"] == update_data["title"]
@@ -164,42 +180,42 @@ async def test_update_book(test_client: AsyncClient):
     assert len(result["genres"]) == 2
     assert all(g["id"] in update_data["genre_ids"] for g in result["genres"])
 
-    response = await test_client.put(f"/books/{book_id}", json=partial_update_data)
+    response = await test_client.put(f"/books/{book_id}", json=partial_update_data, headers=auth_headers(admin_token))
     assert response.status_code == 200
     assert response.json()["title"] == partial_update_data["title"]
     assert response.json()["publication_year"] == update_data["publication_year"]
 
     invalid_data = partial_update_data.copy()
     invalid_data["author_id"] = 9999
-    response = await test_client.put(f"/books/{book_id}", json=invalid_data)
+    response = await test_client.put(f"/books/{book_id}", json=invalid_data, headers=auth_headers(admin_token))
     assert response.status_code == 404
 
     invalid_data = partial_update_data.copy()
     invalid_data["genre_ids"] = [9999]
-    response = await test_client.put(f"/books/{book_id}", json=invalid_data)
+    response = await test_client.put(f"/books/{book_id}", json=invalid_data, headers=auth_headers(admin_token))
     assert response.status_code == 404
 
-    response = await test_client.put(f"/books/{book_id}", json={})
+    response = await test_client.put(f"/books/{book_id}", json={}, headers=auth_headers(admin_token))
     assert response.status_code == 400
 
 
 @pytest.mark.asyncio
-async def test_delete_book(test_client: AsyncClient):
-    author = await test_client.post("/authors/", json={"name": "Джоан Роулинг"})
-    genre = await test_client.post("/genres/", json={"name": "Фэнтези"})
+async def test_delete_book(test_client: AsyncClient, admin_token: str):
+    author = await test_client.post("/authors/", json={"name": "Джоан Роулинг"}, headers=auth_headers(admin_token))
+    genre = await test_client.post("/genres/", json={"name": "Фэнтези"}, headers=auth_headers(admin_token))
 
     data = book_data.copy()
     data["author_id"] = author.json()["id"]
     data["genre_ids"] = [genre.json()["id"]]
 
-    create_resp = await test_client.post("/books/", json=data)
+    create_resp = await test_client.post("/books/", json=data, headers=auth_headers(admin_token))
     book_id = create_resp.json()["id"]
 
-    response = await test_client.delete(f"/books/{book_id}")
+    response = await test_client.delete(f"/books/{book_id}", headers=auth_headers(admin_token))
     assert response.status_code == 204
 
     response = await test_client.get(f"/books/{book_id}")
     assert response.status_code == 404
 
-    response = await test_client.delete("/books/9999")
+    response = await test_client.delete("/books/9999", headers=auth_headers(admin_token))
     assert response.status_code == 404

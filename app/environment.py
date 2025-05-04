@@ -22,9 +22,15 @@ class Settings(BaseSettings):
     TEST_DB_NAME: str
     TEST_DB_URL: URL | None = None
 
+    ADMIN_EMAIL: str
+    ADMIN_USER: str
+    ADMIN_PASS: str
+
     SECRET_KEY: str
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int
+
+    TOP_N_USERS: int = 5
 
     model_config = SettingsConfigDict(env_file="env/app.env")
 

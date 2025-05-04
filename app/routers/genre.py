@@ -7,6 +7,7 @@ from app.database import AsyncDB
 from app.models import Genre
 from app.schemas import PrimaryKey, Skip, Limit
 from app.schemas.genre import GenreGet, GenreCreate, GenreUpdate
+from app.security import CurrentAdmin
 
 router = APIRouter(
     prefix="/genres",
@@ -17,7 +18,8 @@ router = APIRouter(
 @router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_genre(
         genre_data: Annotated[GenreCreate, Body()],
-        db: AsyncDB
+        db: AsyncDB,
+        _: CurrentAdmin
 ) -> GenreGet:
     existing_genre = await Genre.get_by_name(db, genre_data.name)
     if existing_genre is not None:
@@ -67,7 +69,8 @@ async def get_genres(
 async def update_genre(
         genre_id: PrimaryKey,
         genre_data: Annotated[GenreUpdate, Body()],
-        db: AsyncDB
+        db: AsyncDB,
+        _: CurrentAdmin
 ) -> GenreGet:
     genre = await Genre.get_by_id(db, genre_id)
     if genre is None:
@@ -94,13 +97,14 @@ async def update_genre(
     genre = genre.scalar_one()
     genre = GenreGet.model_validate(genre)
     await db.commit()
-    return GenreGet.model_validate(genre)
+    return genre
 
 
 @router.delete("/{genre_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_genre(
         genre_id: PrimaryKey,
-        db: AsyncDB
+        db: AsyncDB,
+        _: CurrentAdmin
 ):
     genre = await Genre.get_by_id(db, genre_id)
     if not genre:

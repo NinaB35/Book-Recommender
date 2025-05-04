@@ -1,6 +1,8 @@
 import pytest
 from httpx import AsyncClient
 
+from tests.conftest import auth_headers
+
 rating_data = {
     "rating": 5,
     "review": "Отличная книга!",
@@ -20,15 +22,15 @@ invalid_rating_data = {
 
 
 @pytest.mark.asyncio
-async def test_create_rating(test_client: AsyncClient):
-    author = await test_client.post("/authors/", json={"name": "Джоан Роулинг"})
-    genre = await test_client.post("/genres/", json={"name": "Фэнтези"})
+async def test_create_rating(test_client: AsyncClient, admin_token: str):
+    author = await test_client.post("/authors/", json={"name": "Джоан Роулинг"}, headers=auth_headers(admin_token))
+    genre = await test_client.post("/genres/", json={"name": "Фэнтези"}, headers=auth_headers(admin_token))
     book = await test_client.post("/books/", json={
         "title": "Гарри Поттер",
         "publication_year": 1997,
         "author_id": author.json()["id"],
         "genre_ids": [genre.json()["id"]]
-    })
+    }, headers=auth_headers(admin_token))
     await test_client.post("/register", json={
         "email": "test@example.com",
         "username": "testuser",
@@ -81,15 +83,15 @@ async def test_create_rating(test_client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_get_rating(test_client: AsyncClient):
-    author = await test_client.post("/authors/", json={"name": "Джоан Роулинг"})
-    genre = await test_client.post("/genres/", json={"name": "Фэнтези"})
+async def test_get_rating(test_client: AsyncClient, admin_token: str):
+    author = await test_client.post("/authors/", json={"name": "Джоан Роулинг"}, headers=auth_headers(admin_token))
+    genre = await test_client.post("/genres/", json={"name": "Фэнтези"}, headers=auth_headers(admin_token))
     book = await test_client.post("/books/", json={
         "title": "Гарри Поттер",
         "publication_year": 1997,
         "author_id": author.json()["id"],
         "genre_ids": [genre.json()["id"]]
-    })
+    }, headers=auth_headers(admin_token))
     await test_client.post("/register", json={
         "email": "test2@example.com",
         "username": "testuser2",
@@ -145,21 +147,21 @@ async def test_get_rating(test_client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_get_user_ratings(test_client: AsyncClient):
-    author = await test_client.post("/authors/", json={"name": "Джоан Роулинг"})
-    genre = await test_client.post("/genres/", json={"name": "Фэнтези"})
+async def test_get_user_ratings(test_client: AsyncClient, admin_token: str):
+    author = await test_client.post("/authors/", json={"name": "Джоан Роулинг"}, headers=auth_headers(admin_token))
+    genre = await test_client.post("/genres/", json={"name": "Фэнтези"}, headers=auth_headers(admin_token))
     book1 = await test_client.post("/books/", json={
         "title": "Гарри Поттер 1",
         "publication_year": 1997,
         "author_id": author.json()["id"],
         "genre_ids": [genre.json()["id"]]
-    })
+    }, headers=auth_headers(admin_token))
     book2 = await test_client.post("/books/", json={
         "title": "Гарри Поттер 2",
         "publication_year": 1998,
         "author_id": author.json()["id"],
         "genre_ids": [genre.json()["id"]]
-    })
+    }, headers=auth_headers(admin_token))
     await test_client.post("/register", json={
         "email": "test3@example.com",
         "username": "testuser3",
@@ -199,15 +201,15 @@ async def test_get_user_ratings(test_client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_update_rating(test_client: AsyncClient):
-    author = await test_client.post("/authors/", json={"name": "Джоан Роулинг"})
-    genre = await test_client.post("/genres/", json={"name": "Фэнтези"})
+async def test_update_rating(test_client: AsyncClient, admin_token: str):
+    author = await test_client.post("/authors/", json={"name": "Джоан Роулинг"}, headers=auth_headers(admin_token))
+    genre = await test_client.post("/genres/", json={"name": "Фэнтези"}, headers=auth_headers(admin_token))
     book = await test_client.post("/books/", json={
         "title": "Гарри Поттер",
         "publication_year": 1997,
         "author_id": author.json()["id"],
         "genre_ids": [genre.json()["id"]]
-    })
+    }, headers=auth_headers(admin_token))
     await test_client.post("/register", json={
         "email": "test4@example.com",
         "username": "testuser4",
@@ -272,15 +274,15 @@ async def test_update_rating(test_client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_delete_rating(test_client: AsyncClient):
-    author = await test_client.post("/authors/", json={"name": "Джоан Роулинг"})
-    genre = await test_client.post("/genres/", json={"name": "Фэнтези"})
+async def test_delete_rating(test_client: AsyncClient, admin_token: str):
+    author = await test_client.post("/authors/", json={"name": "Джоан Роулинг"}, headers=auth_headers(admin_token))
+    genre = await test_client.post("/genres/", json={"name": "Фэнтези"}, headers=auth_headers(admin_token))
     book = await test_client.post("/books/", json={
         "title": "Гарри Поттер",
         "publication_year": 1997,
         "author_id": author.json()["id"],
         "genre_ids": [genre.json()["id"]]
-    })
+    }, headers=auth_headers(admin_token))
     await test_client.post("/register", json={
         "email": "test5@example.com",
         "username": "testuser5",

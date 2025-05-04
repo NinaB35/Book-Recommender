@@ -1,14 +1,14 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status, Body
+from fastapi import APIRouter, HTTPException, status, Body
 from sqlalchemy import select, update, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import AsyncDB
-from app.models import Rating, Book, User
+from app.models import Rating, Book
 from app.schemas import PrimaryKey, Skip, Limit
 from app.schemas.rating import RatingGet, RatingCreate, RatingUpdate
-from app.security import get_current_user
+from app.security import CurrentUser
 
 router = APIRouter(
     prefix="/ratings",
@@ -33,7 +33,7 @@ async def update_book_rating(db: AsyncSession, book_id: int):
 async def create_rating(
         rating_data: Annotated[RatingCreate, Body()],
         db: AsyncDB,
-        current_user: Annotated[User, Depends(get_current_user)]
+        current_user: CurrentUser
 ) -> RatingGet:
     book = await Book.get_by_id(db, rating_data.book_id)
     if book is None:
@@ -79,7 +79,7 @@ async def get_rating(
 @router.get("/")
 async def get_user_ratings(
         db: AsyncDB,
-        current_user: Annotated[User, Depends(get_current_user)],
+        current_user: CurrentUser,
         skip: Skip = 0,
         limit: Limit = 100
 ) -> list[RatingGet]:
@@ -98,7 +98,7 @@ async def update_rating(
         rating_id: PrimaryKey,
         rating_data: Annotated[RatingUpdate, Body()],
         db: AsyncDB,
-        current_user: Annotated[User, Depends(get_current_user)]
+        current_user: CurrentUser
 ) -> RatingGet:
     rating = await Rating.get_by_id(db, rating_id)
     if rating is None:
@@ -136,7 +136,7 @@ async def update_rating(
 async def delete_rating(
         rating_id: PrimaryKey,
         db: AsyncDB,
-        current_user: Annotated[User, Depends(get_current_user)]
+        current_user: CurrentUser
 ):
     rating = await Rating.get_by_id(db, rating_id)
     if rating is None:

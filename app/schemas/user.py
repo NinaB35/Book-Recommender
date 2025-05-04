@@ -31,3 +31,4 @@ class Token(BaseModel):
 
 class UserGet(UserBase):
     id: int
+    is_admin: bool

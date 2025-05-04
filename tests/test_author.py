@@ -1,6 +1,8 @@
 import pytest
 from httpx import AsyncClient
 
+from tests.conftest import auth_headers
+
 author_data = {
     "name": "Джоан Роулинг",
     "bio": "Британская писательница, автор серии о Гарри Поттере"
@@ -18,8 +20,14 @@ update_author_data = {
 
 
 @pytest.mark.asyncio
-async def test_create_author(test_client: AsyncClient):
+async def test_create_author_unauthorized(test_client: AsyncClient):
     response = await test_client.post("/authors/", json=author_data)
+    assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_create_author(test_client: AsyncClient, admin_token: str):
+    response = await test_client.post("/authors/", json=author_data, headers=auth_headers(admin_token))
     assert response.status_code == 201
     data = response.json()
     assert data["name"] == author_data["name"]
@@ -27,21 +35,22 @@ async def test_create_author(test_client: AsyncClient):
     assert "id" in data
     assert data["books_count"] == 0
 
-    response = await test_client.post("/authors/", json=author_data)
+    response = await test_client.post("/authors/", json=author_data, headers=auth_headers(admin_token))
     assert response.status_code == 400
     assert "already exists" in response.json()["detail"]
 
-    response = await test_client.post("/authors/", json={"name": author_data["name"].lower()})
+    response = await test_client.post("/authors/", json={"name": author_data["name"].lower()},
+                                      headers=auth_headers(admin_token))
     assert response.status_code == 400
     assert "already exists" in response.json()["detail"]
 
-    response = await test_client.post("/authors/", json=invalid_author_data)
+    response = await test_client.post("/authors/", json=invalid_author_data, headers=auth_headers(admin_token))
     assert response.status_code == 422
 
 
 @pytest.mark.asyncio
-async def test_get_author(test_client: AsyncClient):
-    create_resp = await test_client.post("/authors/", json=author_data)
+async def test_get_author(test_client: AsyncClient, admin_token: str):
+    create_resp = await test_client.post("/authors/", json=author_data, headers=auth_headers(admin_token))
     author_id = create_resp.json()["id"]
 
     response = await test_client.get(f"/authors/{author_id}")
@@ -57,7 +66,7 @@ async def test_get_author(test_client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_get_authors_list(test_client: AsyncClient):
+async def test_get_authors_list(test_client: AsyncClient, admin_token: str):
     response = await test_client.get("/authors/")
     initial_count = len(response.json())
 
@@ -67,7 +76,7 @@ async def test_get_authors_list(test_client: AsyncClient):
         {"name": "Лев Толстой", "bio": "Русский классик"}
     ]
     for author in authors:
-        await test_client.post("/authors/", json=author)
+        await test_client.post("/authors/", json=author, headers=auth_headers(admin_token))
 
     response = await test_client.get("/authors/")
     assert response.status_code == 200
@@ -79,42 +88,45 @@ async def test_get_authors_list(test_client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_update_author(test_client: AsyncClient):
-    create_resp = await test_client.post("/authors/", json=author_data)
+async def test_update_author(test_client: AsyncClient, admin_token: str):
+    create_resp = await test_client.post("/authors/", json=author_data, headers=auth_headers(admin_token))
     author_id = create_resp.json()["id"]
 
-    response = await test_client.put(f"/authors/{author_id}", json=update_author_data)
+    response = await test_client.put(f"/authors/{author_id}", json=update_author_data,
+                                     headers=auth_headers(admin_token))
     assert response.status_code == 200
     data = response.json()
     assert data["name"] == update_author_data["name"]
     assert data["bio"] == update_author_data["bio"]
 
-    response = await test_client.put(f"/authors/{author_id}", json={"bio": "Новая биография"})
+    response = await test_client.put(f"/authors/{author_id}", json={"bio": "Новая биография"},
+                                     headers=auth_headers(admin_token))
     assert response.status_code == 200
     assert response.json()["name"] == update_author_data["name"]
     assert response.json()["bio"] == "Новая биография"
 
-    await test_client.post("/authors/", json={"name": "Дубликат"})
-    response = await test_client.put(f"/authors/{author_id}", json={"name": "Дубликат"})
+    await test_client.post("/authors/", json={"name": "Дубликат"}, headers=auth_headers(admin_token))
+    response = await test_client.put(f"/authors/{author_id}", json={"name": "Дубликат"},
+                                     headers=auth_headers(admin_token))
     assert response.status_code == 400
 
-    response = await test_client.put(f"/authors/{author_id}", json={"name": "A"})
+    response = await test_client.put(f"/authors/{author_id}", json={"name": "A"}, headers=auth_headers(admin_token))
     assert response.status_code == 422
 
-    response = await test_client.put(f"/authors/{author_id}", json={})
+    response = await test_client.put(f"/authors/{author_id}", json={}, headers=auth_headers(admin_token))
     assert response.status_code == 400
 
 
 @pytest.mark.asyncio
-async def test_delete_author(test_client: AsyncClient):
-    create_resp = await test_client.post("/authors/", json=author_data)
+async def test_delete_author(test_client: AsyncClient, admin_token: str):
+    create_resp = await test_client.post("/authors/", json=author_data, headers=auth_headers(admin_token))
     author_id = create_resp.json()["id"]
 
-    response = await test_client.delete(f"/authors/{author_id}")
+    response = await test_client.delete(f"/authors/{author_id}", headers=auth_headers(admin_token))
     assert response.status_code == 204
 
     response = await test_client.get(f"/authors/{author_id}")
     assert response.status_code == 404
 
-    response = await test_client.delete("/authors/9999")
+    response = await test_client.delete("/authors/9999", headers=auth_headers(admin_token))
     assert response.status_code == 404

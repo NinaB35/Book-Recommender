@@ -7,6 +7,7 @@ from app.database import AsyncDB
 from app.models import Author, Book
 from app.schemas import PrimaryKey, Skip, Limit
 from app.schemas.author import AuthorGet, AuthorCreate, AuthorUpdate
+from app.security import CurrentAdmin
 
 router = APIRouter(
     prefix="/authors",
@@ -17,7 +18,8 @@ router = APIRouter(
 @router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_author(
         author_data: Annotated[AuthorCreate, Body()],
-        db: AsyncDB
+        db: AsyncDB,
+        _: CurrentAdmin
 ) -> AuthorGet:
     existing_author = await Author.get_by_name(db, author_data.name)
     if existing_author is not None:
@@ -81,7 +83,8 @@ async def get_authors(
 async def update_author(
         author_id: PrimaryKey,
         author_data: Annotated[AuthorUpdate, Body()],
-        db: AsyncDB
+        db: AsyncDB,
+        _: CurrentAdmin
 ) -> AuthorGet:
     author = await Author.get_by_id(db, author_id)
     if author is None:
@@ -120,7 +123,8 @@ async def update_author(
 @router.delete("/{author_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_author(
         author_id: PrimaryKey,
-        db: AsyncDB
+        db: AsyncDB,
+        _: CurrentAdmin
 ):
     author = await Author.get_by_id(db, author_id)
     if author is None:

@@ -8,6 +8,7 @@ from app.database import AsyncDB
 from app.models import Book, BookGenre, Author, Genre
 from app.schemas import PrimaryKey
 from app.schemas.book import BookGet, BookCreate, BookUpdate, BookGetQuery
+from app.security import CurrentAdmin
 
 router = APIRouter(
     prefix="/books",
@@ -18,7 +19,8 @@ router = APIRouter(
 @router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_book(
         book_data: Annotated[BookCreate, Body()],
-        db: AsyncDB
+        db: AsyncDB,
+        _: CurrentAdmin
 ) -> BookGet:
     author = await Author.get_by_id(db, book_data.author_id)
     if author is None:
@@ -100,7 +102,8 @@ async def get_books(
 async def update_book(
         book_id: PrimaryKey,
         book_data: Annotated[BookUpdate, Body()],
-        db: AsyncDB
+        db: AsyncDB,
+        _: CurrentAdmin
 ) -> BookGet:
     book = await Book.get_by_id(db, book_id)
     if book is None:
@@ -164,7 +167,8 @@ async def update_book(
 @router.delete("/{book_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_book(
         book_id: PrimaryKey,
-        db: AsyncDB
+        db: AsyncDB,
+        _: CurrentAdmin
 ):
     book = await Book.get_by_id(db, book_id)
     if book is None:
