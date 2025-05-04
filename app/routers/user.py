@@ -10,7 +10,7 @@ from app.database import AsyncDB
 from app.environment import settings
 from app.models import Rating, Book
 from app.models.user import User
-from app.schemas import Limit
+from app.schemas import Limit, Skip
 from app.schemas.book import BookGet
 from app.schemas.user import UserCreate, Token, UserGet
 from app.security import authenticate_user, create_access_token, get_password_hash, CurrentUser
@@ -82,7 +82,7 @@ def cosine_similarity(a: np.ndarray, b: np.ndarray) -> float:
     return dot_product / (norm_a * norm_b) if norm_a > 0 and norm_b > 0 else 0
 
 
-async def get_fallback_recommendations(db: AsyncDB, limit: int) -> list[BookGet]:
+async def get_fallback_recommendations(db: AsyncDB, skip: int, limit: int) -> list[BookGet]:
     """Рекомендации без учета схожести пользователей."""
     books = await db.execute(
         select(Book)
@@ -91,7 +91,8 @@ async def get_fallback_recommendations(db: AsyncDB, limit: int) -> list[BookGet]
             selectinload(Book.genres),
             selectinload(Book.ratings)
         )
-        .order_by(Book.average_rating.desc())
+        .order_by(Book.average_rating.desc(), Book.publication_year.desc())
+        .offset(skip)
         .limit(limit)
     )
     books = books.scalars().all()
@@ -102,6 +103,7 @@ async def get_fallback_recommendations(db: AsyncDB, limit: int) -> list[BookGet]
 async def recommendations(
         current_user: CurrentUser,
         db: AsyncDB,
+        skip: Skip = 0,
         limit: Limit = 100
 ) -> list[BookGet]:
     ratings = await db.execute(
@@ -113,7 +115,7 @@ async def recommendations(
     )
     ratings = ratings.all()
     if len(ratings) == 0:
-        return []
+        return await get_fallback_recommendations(db, skip, limit)
 
     user_ids = await db.execute(select(User.id))
     user_ids = user_ids.scalars().all()
@@ -128,41 +130,35 @@ async def recommendations(
     for user_id, book_id, rating in ratings:
         rating_matrix[user_to_idx[user_id], book_to_idx[book_id]] = rating
 
-    user_means = np.where(
-        rating_matrix.sum(axis=1) > 0,
-        rating_matrix.sum(axis=1) / (rating_matrix != 0).sum(axis=1),
-        0
-    )
-    rating_matrix_norm = rating_matrix - user_means[:, np.newaxis]
-
     similarities = np.zeros(len(user_ids))
     for i in range(len(user_ids)):
         if i != current_user_idx:
             similarities[i] = cosine_similarity(
-                rating_matrix_norm[current_user_idx],
-                rating_matrix_norm[i]
+                rating_matrix[current_user_idx],
+                rating_matrix[i]
             )
 
     top_n = min(settings.TOP_N_USERS, len(user_ids) - 1)
     top_user_indices = np.argsort(similarities)[-top_n:][::-1]
 
     if len(top_user_indices) == 0:
-        return await get_fallback_recommendations(db, limit)
+        return await get_fallback_recommendations(db, skip, limit)
 
-    recommended_books = np.zeros(len(book_ids))
     current_user_no_ratings = rating_matrix[current_user_idx] == 0
-
+    recommended_books = np.zeros(len(book_ids))
     for user_idx in top_user_indices:
         if similarities[user_idx] > 0:
             user_ratings = rating_matrix[user_idx]
             mask = current_user_no_ratings & (user_ratings > 0)
             recommended_books[mask] += user_ratings[mask] * similarities[user_idx]
 
-    top_book_indices = np.argsort(recommended_books)[-limit:][::-1]
+    top_book_indices = np.argsort(recommended_books)[::-1]
     recommended_book_ids = [book_ids[i] for i in top_book_indices if recommended_books[i] > 0]
 
     if len(recommended_book_ids) == 0:
-        return await get_fallback_recommendations(db, limit)
+        return await get_fallback_recommendations(db, skip, limit)
+
+    recommended_book_ids = recommended_book_ids[skip: skip + limit]
 
     books = await db.execute(
         select(Book)
